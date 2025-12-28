@@ -13,7 +13,22 @@ Mako-Agent is an intelligent nutritionist and meal planning assistant designed t
 
 The Mako-Agent uses a sophisticated AI model to understand your requests and interact with a recipe database. Here’s a high-level overview of the architecture:
 
-[// TODO: Add an architectural diagram or flowchart here to visually explain the data flow and component interactions.]
+```mermaid
+graph TD
+    A[User] -->|HTTP Request| B(FastAPI Backend);
+    B --> C{ReActAgent (Llama-Index)};
+    C --> D[Tools];
+    D --> E(PostgreSQL Database);
+    E --> D;
+    D --> C;
+    C --> B;
+    B -->|HTTP Response| A;
+
+    subgraph "Agent Tools"
+        D --> D1[search_recipes];
+        D --> D2[get_recipe_details];
+    end
+```
 
 - **Backend API:** A robust backend is built with FastAPI, providing endpoints for chat interactions and health checks.
 - **AI Agent:** The core of the application is a `ReActAgent` from the Llama-Index library, which uses an OpenAI model (GPT-3.5-Turbo) to reason and act.
