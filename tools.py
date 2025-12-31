@@ -63,7 +63,7 @@ def get_recipe_details(
         with get_db_connection() as conn:
             # 1. Determine lookup method
             if recipe_id:
-                query = text("SELECT id, name, calories, protein, fat, carbs, image_url FROM recipes WHERE id = :val")
+                query = text("SELECT id, name, calories, protein, fat, carbs, image_url FROM recipes WHERE recipe_id = :val")
                 param = {"val": recipe_id}
             elif recipe_name:
                 # We use ILIKE for case-insensitive matching if they search by name
