@@ -1,5 +1,7 @@
 # Mako-Agent: Your AI-Powered Macro Coach
 
+![Mako Agent](logo.png "Mako Agent")
+
 Mako-Agent is an intelligent nutritionist and meal planning assistant designed to help you achieve your diet and healthy lifestyle goals. Powered by Llama-Index and OpenAI, this agent provides personalized recipe recommendations based on your specific macro-nutrient requirements.
 
 ## Features
