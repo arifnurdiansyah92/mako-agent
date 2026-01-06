@@ -10,7 +10,7 @@ load_dotenv()
 
 # 2. Import Local Modules
 # We import the agent logic we just built
-from agent import get_or_create_agent
+from agent import get_agent_response
 from database import engine
 
 # 3. Setup FastAPI App
@@ -37,6 +37,8 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
+    response_type: str
+    data: dict
 
 # 6. The Chat Endpoint
 @app.post("/chat", response_model=ChatResponse)
@@ -45,16 +47,13 @@ async def chat_endpoint(request: ChatRequest):
     Receives a user message, finds the correct agent session, and returns the AI response.
     """
     try:
-        # Get the specific agent for this user session
-        agent = get_or_create_agent(request.session_id)
-        
         # Log for debugging
         logging.info(f"Session: {request.session_id} | User Message: {request.message}")
         
         # Send message to agent (asynchronous call)
-        response = await agent.run(request.message)
+        response = await get_agent_response(request.message, request.session_id)
         
-        return ChatResponse(response=str(response))
+        return ChatResponse(response=response.response, response_type=response.response_type, data=response.data)
         
     except Exception as e:
         logging.error(f"Error in chat endpoint: {e}")

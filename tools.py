@@ -41,12 +41,25 @@ def search_recipes(
             
         if not result:
             return "No recipes found matching those criteria."
-            
-        recipes_str = ""
+        
+        recipes_list = []
         for row in result:
-            # CHANGE: We now include [ID: {row[0]}] so the Agent can see it
-            recipes_str += f"- [ID: {row[0]}] {row[1]} (Cal: {row[2]}, Prot: {row[3]}g, Fat: {row[4]}g, Carbs: {row[5]}g)\n"
-        return recipes_str
+            # Map the tuple by index. 
+            # row structure based on your logs: (id, name, cal, prot, fat, carb)
+            recipes_list.append({
+                "id": row[0],
+                "name": row[1],
+                "calories": row[2],
+                # Explicitly cast Decimal to float (or int) for JSON serialization
+                "macros": {
+                    "protein": float(row[3]),
+                    "fat": float(row[4]),
+                    "carbs": float(row[5])
+                }
+            })
+        print("Tools Called")
+        print(json.dumps(recipes_list))
+        return json.dumps(recipes_list)
         
     except Exception as e:
         return f"Database Error: {str(e)}"
@@ -63,7 +76,7 @@ def get_recipe_details(
         with get_db_connection() as conn:
             # 1. Determine lookup method
             if recipe_id:
-                query = text("SELECT id, name, calories, protein, fat, carbs, image_url FROM recipes WHERE recipe_id = :val")
+                query = text("SELECT id, name, calories, protein, fat, carbs, image_url FROM recipes WHERE id = :val")
                 param = {"val": recipe_id}
             elif recipe_name:
                 # We use ILIKE for case-insensitive matching if they search by name
