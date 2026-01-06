@@ -1,9 +1,22 @@
-# backend/tools.py
 import json
+import os
 from typing import Optional
 from sqlalchemy import text
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.core.tools import FunctionTool
 from database import get_db_connection
+
+# --- RAG Setup ---
+KNOWLEDGE_DIR = "knowledge"
+query_engine = None
+
+if os.path.exists(KNOWLEDGE_DIR) and any(os.scandir(KNOWLEDGE_DIR)):
+    try:
+        documents = SimpleDirectoryReader(KNOWLEDGE_DIR).load_data()
+        index = VectorStoreIndex.from_documents(documents)
+        query_engine = index.as_query_engine()
+    except Exception as e:
+        print(f"Error initializing RAG: {e}")
 
 def search_recipes(
     min_protein: Optional[int] = None, 
@@ -119,8 +132,8 @@ def get_recipe_details(
                 "name": recipe[1],
                 "image": recipe[6],
                 "macros": {
-                    "calories": recipe[2], "protein": recipe[3],
-                    "fat": recipe[4], "carbs": recipe[5]
+                    "calories": recipe[2], "protein": float(recipe[3]),
+                    "fat": float(recipe[4]), "carbs": float(recipe[5])
                 },
                 "ingredients": ingredients_list,
                 "instructions": steps_list
@@ -129,8 +142,32 @@ def get_recipe_details(
     except Exception as e:
         return f"Database Error: {str(e)}"
 
+def search_calorie_rules(query: str) -> str:
+    """
+    Search for calorie calculation rules (BMR, TDEE, Mifflin-St Jeor).
+    Use this to find formulas for personal calorie needs.
+    """
+    if not query_engine:
+        return "Calorie calculation rules are currently unavailable (Knowledge base empty)."
+    
+    response = query_engine.query(f"Find calorie calculation formulas and rules for: {query}")
+    return str(response)
+
+def search_macro_rules(query: str) -> str:
+    """
+    Search for macro-nutrient distribution rules (Protein, Fats, Carbs ratios).
+    Use this to find how to divide calories into macros.
+    """
+    if not query_engine:
+        return "Macro distribution rules are currently unavailable (Knowledge base empty)."
+    
+    response = query_engine.query(f"Find macro-nutrient distribution ratios and rules for: {query}")
+    return str(response)
+
 def get_tools():
     return [
         FunctionTool.from_defaults(search_recipes),
         FunctionTool.from_defaults(get_recipe_details),
+        FunctionTool.from_defaults(search_calorie_rules),
+        FunctionTool.from_defaults(search_macro_rules),
     ]
